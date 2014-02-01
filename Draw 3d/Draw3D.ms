@@ -1,8 +1,10 @@
 /*-/-/-/-/-/   SCRIPT:   detach faces to fronts and draw it to shapes v1.   -/-/-/-/-/*/
 /*-/-/-/-/-/   CREATED BY:   Al Raz "Rapida"   -/-/-/-/-/*/
 /*-/-/-/-/-/   EMAIL:   rapidograph.il@gmail.com   -/-/-/-/-/*/
-global draw3dINIFile = (getDir #plugcfg + "\draw3d.ini")
-global scriptPath = (getDir #userScripts + "\Draw 3D to Autocad")
+fileName = getThisScriptFilename ()
+-- scriptPath = getFilenamePath fileName
+global draw3dINIFile = (scriptPath + "draw3d.ini")
+global scriptPath = getFilenamePath fileName
 createFront = scriptPath + (getINISetting draw3dINIFile "Files" "CreateFront")
 drawEditpoly = scriptPath + (getINISetting draw3dINIFile "Files" "DrawEP")
 FrontFace = scriptPath + (getINISetting draw3dINIFile "Files" "FrontFace")
