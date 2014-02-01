@@ -2,9 +2,8 @@
 /*-/-/-/-/-/   CREATED BY:   Al Raz "Rapida"   -/-/-/-/-/*/
 /*-/-/-/-/-/   EMAIL:   rapidograph.il@gmail.com   -/-/-/-/-/*/
 fileName = getThisScriptFilename ()
--- scriptPath = getFilenamePath fileName
-global draw3dINIFile = (scriptPath + "draw3d.ini")
 global scriptPath = getFilenamePath fileName
+global draw3dINIFile = (scriptPath + "draw3d.ini")
 createFront = scriptPath + (getINISetting draw3dINIFile "Files" "CreateFront")
 drawEditpoly = scriptPath + (getINISetting draw3dINIFile "Files" "DrawEP")
 FrontFace = scriptPath + (getINISetting draw3dINIFile "Files" "FrontFace")

@@ -1,5 +1,6 @@
 README.
 Draw 3D geometry from your 3ds max model to 2D, for import to CAD software.
+Its work in 3ds max 2011 and higher.
 First release: 
 1. Not have any UI for properties.
 2. For change setings you need write them to .ini file in the folder.
