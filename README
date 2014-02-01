@@ -1,0 +1,13 @@
+README.
+Draw 3D geometry from your 3ds max model to 2D, for import to CAD software.
+First release: 
+1. Not have any UI for properties.
+2. For change setings you need write them to .ini file in the folder.
+3. Not have instalation package, just put the folder to you scripts derectory.
+		HOW ITS WORKING:
+		1. Select Your model
+		2. Run the Draw3d.ms file.
+		3. The script make bounding box arround the model for testing the visible verteces. (bBox, have setings in .ini file for offset, they change the offset of finall drawings from the model)
+		4. For all verteces in the model send the ray to the bBox faces.
+		5. If the ray exist, they send number of back rays arround the exist ray. (have setings in .ini file - nGon(number of back rays, big number more time to calculate, must be biger then 5), nGon radius(radius of nGon rays, big radius may not work perfectly))
+		6. Back rays test the faces in mesh for visibility, if is not visible the script delete it.
