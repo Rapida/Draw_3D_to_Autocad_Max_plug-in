@@ -47,7 +47,7 @@ rollout frontsSubRollout "Fronts Parameters"
 		checkbox TopChk "" pos:[72,88] width:18 height:18 tooltip:"2"
 		label BottomLbl "Bottom:" pos:[16,104] width:50 height:16
 		checkbox BottomChk "" pos:[72,104] width:18 height:18 tooltip:"1"
-		checkbutton FrontsPreviewBtn "Preview\n Fronts\n Planes " pos:[104,32] width:80 height:80
+		checkbutton FrontsPreviewBtn "Planes" pos:[104,32] width:80 height:80 tooltip:"Select the fronts you want to preview!\nPress the button to preview!"
 		on frontsSubRollout open do fArr = #()
 			on FrontsPreviewBtn changed theState do
 			(
