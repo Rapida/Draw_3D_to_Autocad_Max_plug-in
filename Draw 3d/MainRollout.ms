@@ -1,5 +1,8 @@
 /* Master Rollut of Draw 3d script */
 try(destroyDialog Draw_3D_Main)catch()
+fileName = getThisScriptFilename ()
+thePath = getFilenamePath fileName
+IniFile = thePath + "draw3d.ini"
 rollout frontsSubRollout "Fronts Parameters" 
 	(
 	fn frontFace theObj offset:5 fronts:#{}=
@@ -22,33 +25,30 @@ rollout frontsSubRollout "Fronts Parameters"
 				polyop.detachFaces pp f delete:false name:N asNode:true
 				sh = getNodeByName N exact:true
 				wc = #(red,blue,green,black,gray,yellow)
-				if f == 1 do (sh.wirecolor = wc[1])
-				if f == 2 do (sh.wirecolor = wc[2])
-				if f == 3 do (sh.wirecolor = wc[3])
-				if f == 4 do (sh.wirecolor = wc[4])
-				if f == 5 do (sh.wirecolor = wc[5])
-				if f == 6 do (sh.wirecolor = wc[6])
+				sh.wirecolor = wc[f]
 				append locArr sh
 			)
 		)
 		delete pp
 		fArr = locArr
 	)
-		label grpFlbl "Check the fronts you want to create" pos:[8,5] width:180 height:16
-		label FrontLbl "Front:" pos:[16,24] width:50 height:16
-		checkbox frontChk "" pos:[72,24] width:18 height:18 tooltip:"3"
-		label BackLbl "Back:" pos:[16,40] width:50 height:16
-		checkbox BackChk "" pos:[72,40] width:18 height:18 tooltip:"5"
-		label RightLbl "Right:" pos:[16,56] width:50 height:16
-		checkbox RightChk "" pos:[72,56] width:18 height:18 tooltip:"4"
-		label Leftlbl "Left:" pos:[16,72] width:50 height:16
-		checkbox LeftChk "" pos:[72,72] width:18 height:18 tooltip:"6"
-		label TopLbl "Top:" pos:[16,88] width:50 height:16
-		checkbox TopChk "" pos:[72,88] width:18 height:18 tooltip:"2"
-		label BottomLbl "Bottom:" pos:[16,104] width:50 height:16
-		checkbox BottomChk "" pos:[72,104] width:18 height:18 tooltip:"1"
-		checkbutton FrontsPreviewBtn "Preview\n Fronts\n Planes " pos:[104,32] width:80 height:80
+		label grpFlbl "Check the boxes you want to draw" align:#center pos:[8,5] width:180 height:16
+		checkbox frontChk "Front" pos:[16,24] width:50 height:18 tooltip:"Front"
+		checkbox BackChk "Back" pos:[16,40] width:50 height:18 tooltip:"Back"
+		checkbox RightChk "Right" pos:[16,56] width:50 height:18 tooltip:"Right"
+		checkbox LeftChk "Left" pos:[16,72] width:50 height:18 tooltip:"Left"
+		checkbox TopChk "Top" pos:[16,88] width:50 height:18 tooltip:"Top"
+		checkbox BottomChk "Bottom" pos:[16,104] width:55 height:18 tooltip:"Bottom"
+		checkbutton FrontsPreviewBtn "Preview" pos:[104,32] width:80 height:80 tooltip:"Preview the Fronts Planes"
 		on frontsSubRollout open do fArr = #()
+		on frontChk changed state do 
+		(
+			if state == false do 
+			(
+				FrontsPreviewBtn.checked = off
+				if fArr != undefined and fArr != #() do delete fArr
+			)
+		)
 			on FrontsPreviewBtn changed theState do
 			(
 				if theState == true then
@@ -59,13 +59,13 @@ rollout frontsSubRollout "Fronts Parameters"
 					classOF i == CheckBoxControl \
 					and i.checked == on do
 						(
-							appendIfunique checkBoxArr (i.tooltip as integer)
+							n = (getINISetting IniFile "Fronts" i.text) as integer
+							appendIfunique checkBoxArr n
 						)
 				global fArr = frontFace theObj fronts:checkBoxArr
 				)
 				else
 				(
-				print "check box unchecked"
 					if fArr != undefined and fArr != #() do delete fArr
 					fArr = undefined
 				)
