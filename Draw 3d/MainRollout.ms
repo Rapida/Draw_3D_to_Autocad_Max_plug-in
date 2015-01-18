@@ -32,6 +32,7 @@ rollout frontsSubRollout "Fronts Parameters"
 		delete pp
 		fArr = locArr
 	)
+<<<<<<< HEAD
 		label grpFlbl "Check the boxes you want to draw" align:#center pos:[8,5] width:180 height:16
 		checkbox frontChk "Front" pos:[16,24] width:50 height:18 tooltip:"Front"
 		checkbox BackChk "Back" pos:[16,40] width:50 height:18 tooltip:"Back"
@@ -40,6 +41,22 @@ rollout frontsSubRollout "Fronts Parameters"
 		checkbox TopChk "Top" pos:[16,88] width:50 height:18 tooltip:"Top"
 		checkbox BottomChk "Bottom" pos:[16,104] width:55 height:18 tooltip:"Bottom"
 		checkbutton FrontsPreviewBtn "Preview" pos:[104,32] width:80 height:80 tooltip:"Preview the Fronts Planes"
+=======
+		label grpFlbl "Check the fronts you want to create" pos:[8,5] width:180 height:16
+		label FrontLbl "Front:" pos:[16,24] width:50 height:16
+		checkbox frontChk "" pos:[72,24] width:18 height:18 tooltip:"3"
+		label BackLbl "Back:" pos:[16,40] width:50 height:16
+		checkbox BackChk "" pos:[72,40] width:18 height:18 tooltip:"5"
+		label RightLbl "Right:" pos:[16,56] width:50 height:16
+		checkbox RightChk "" pos:[72,56] width:18 height:18 tooltip:"4"
+		label Leftlbl "Left:" pos:[16,72] width:50 height:16
+		checkbox LeftChk "" pos:[72,72] width:18 height:18 tooltip:"6"
+		label TopLbl "Top:" pos:[16,88] width:50 height:16
+		checkbox TopChk "" pos:[72,88] width:18 height:18 tooltip:"2"
+		label BottomLbl "Bottom:" pos:[16,104] width:50 height:16
+		checkbox BottomChk "" pos:[72,104] width:18 height:18 tooltip:"1"
+		checkbutton FrontsPreviewBtn "Planes" pos:[104,32] width:80 height:80 tooltip:"Select the fronts you want to preview!\nPress the button to preview!"
+>>>>>>> origin/UI
 		on frontsSubRollout open do fArr = #()
 		on frontChk changed state do 
 		(
