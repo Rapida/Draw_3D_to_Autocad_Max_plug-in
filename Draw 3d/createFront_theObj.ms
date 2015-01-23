@@ -1,6 +1,8 @@
 fn createFront theObj = 
 (
-	fArr = frontFace theObj offset:bBoxOffset
+	if fArr == undefined or fArr == #() do (
+		global 	fArr = frontFace theObj offset:((getINISetting IniFile "Preferences" "bBox offset") as integer) fronts:checkBoxArr 
+	)
 	newObj = convertToMesh (copy theObj)
 	print (fArr as string)
 	for m in fArr do

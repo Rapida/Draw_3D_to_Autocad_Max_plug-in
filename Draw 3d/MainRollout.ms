@@ -1,11 +1,21 @@
 /* Master Rollut of Draw 3d script */
-try(destroyDialog Draw_3D_Main)catch()
+try(
+	destroyDialog Draw_3D_Main
+	callbackItem = undefined
+	gc light:true
+	)catch()
 fileName = getThisScriptFilename ()
 thePath = getFilenamePath fileName
 IniFile = thePath + "draw3d.ini"
-rollout frontsSubRollout "Fronts Parameters" 
+	fn getPref data =(execute (getINISetting IniFile "Preferences" data))
+	fn setPref dataOut val prOut:"Preferences" = (setINISetting IniFile prOut dataOut (val as String))
+		filein (thePath + "drawEP_Obj_Cam.ms")
+		filein (thePath + "globals.ms")
+	fn enableButtons sub st:true= 
 	(
-	fn frontFace theObj offset:5 fronts:#{}=
+		for d in sub.controls do d.enabled = st
+	)
+fn frontFace theObj offset:5 fronts:#{}=
 	(
 		l = (theObj.max.y - theObj.min.y) + offset
 		w = (theObj.max.x - theObj.min.x) + offset
@@ -32,7 +42,22 @@ rollout frontsSubRollout "Fronts Parameters"
 		delete pp
 		fArr = locArr
 	)
-<<<<<<< HEAD
+fn getMatrix = 
+(
+	for f in fArr collect
+	(
+		faceNormal = in coordsys f (polyop.getFaceNormal f 1)
+		faceCenter = polyop.getFaceCenter f 1
+		worldUpVector = [0,0,1]
+		rightVector = normalize (cross worldUpVector faceNormal)
+		upVector = normalize ( cross rightVector faceNormal )
+		theMatrix =matrix3 rightVector upVector faceNormal faceCenter
+		print theMatrix
+		theMatrix
+	)
+)
+rollout frontsSubRollout "Fronts Parameters" 
+	(
 		label grpFlbl "Check the boxes you want to draw" align:#center pos:[8,5] width:180 height:16
 		checkbox frontChk "Front" pos:[16,24] width:50 height:18 tooltip:"Front"
 		checkbox BackChk "Back" pos:[16,40] width:50 height:18 tooltip:"Back"
@@ -41,79 +66,112 @@ rollout frontsSubRollout "Fronts Parameters"
 		checkbox TopChk "Top" pos:[16,88] width:50 height:18 tooltip:"Top"
 		checkbox BottomChk "Bottom" pos:[16,104] width:55 height:18 tooltip:"Bottom"
 		checkbutton FrontsPreviewBtn "Preview" pos:[104,32] width:80 height:80 tooltip:"Preview the Fronts Planes"
-=======
-		label grpFlbl "Check the fronts you want to create" pos:[8,5] width:180 height:16
-		label FrontLbl "Front:" pos:[16,24] width:50 height:16
-		checkbox frontChk "" pos:[72,24] width:18 height:18 tooltip:"3"
-		label BackLbl "Back:" pos:[16,40] width:50 height:16
-		checkbox BackChk "" pos:[72,40] width:18 height:18 tooltip:"5"
-		label RightLbl "Right:" pos:[16,56] width:50 height:16
-		checkbox RightChk "" pos:[72,56] width:18 height:18 tooltip:"4"
-		label Leftlbl "Left:" pos:[16,72] width:50 height:16
-		checkbox LeftChk "" pos:[72,72] width:18 height:18 tooltip:"6"
-		label TopLbl "Top:" pos:[16,88] width:50 height:16
-		checkbox TopChk "" pos:[72,88] width:18 height:18 tooltip:"2"
-		label BottomLbl "Bottom:" pos:[16,104] width:50 height:16
-		checkbox BottomChk "" pos:[72,104] width:18 height:18 tooltip:"1"
-		checkbutton FrontsPreviewBtn "Planes" pos:[104,32] width:80 height:80 tooltip:"Select the fronts you want to preview!\nPress the button to preview!"
->>>>>>> origin/UI
-		on frontsSubRollout open do fArr = #()
-		on frontChk changed state do 
-		(
-			if state == false do 
-			(
-				FrontsPreviewBtn.checked = off
-				if fArr != undefined and fArr != #() do delete fArr
-			)
-		)
-			on FrontsPreviewBtn changed theState do
-			(
-				if theState == true then
-				(
-				theObj = $
+		on frontsSubRollout open do ( if $ == undefined or selection.count > 1 do enableButtons frontsSubRollout st:false; fArr = #())
+		on frontChk changed state do ( if state == false do ( FrontsPreviewBtn.checked = off; if fArr != undefined and fArr != #() do delete fArr ) )
+		on FrontsPreviewBtn changed theState do
+			(if theState == true then
+				( theObj = $
 					checkBoxArr = #{}
-					for i in frontsSubRollout.controls where \
-					classOF i == CheckBoxControl \
-					and i.checked == on do
-						(
-							n = (getINISetting IniFile "Fronts" i.text) as integer
-							appendIfunique checkBoxArr n
-						)
-				global fArr = frontFace theObj fronts:checkBoxArr
-				)
+					for i in frontsSubRollout.controls where classOF i == CheckBoxControl and i.checked == on do
+						( n = (getINISetting IniFile "Fronts" i.text) as integer
+							appendIfunique checkBoxArr n )
+					global fArr = frontFace theObj offset:((getINISetting IniFile "Preferences" "bBox offset") as integer) fronts:checkBoxArr )
 				else
-				(
-					if fArr != undefined and fArr != #() do delete fArr
-					fArr = undefined
-				)
-			)
-			on frontsSubRollout close do 
-				(
-					if fArr != undefined and fArr != #() do delete fArr
-				)
+				( if fArr != undefined and fArr != #() do delete fArr
+					fArr = undefined ) )
+			on frontsSubRollout close do ( if fArr != undefined or fArr != #() do delete fArr )
 	)
-rollout dataSettings "Data Output settings"
+rollout drawingsSettings "Drawing Settings" width:220 height:211
 (
-	label CreateLbl "Create Fronts Drawings:" pos:[10,10] width:120 height:16
-	button SettingsBtn "Settings" pos:[136,5] width:55 height:30
+	fn setPref dataOut val prOut:"Preferences" = (setINISetting IniFile prOut dataOut (val as String))
+	colorPicker boCp "Border Color:         " offset:[-10,0] width:185 height:16 color:(getPref "Border Color") fieldWidth:20 title:"Choose a color for drawing lines"
+	colorPicker edCp "Edges Color:         " offset:[-10,0] width:185 height:16 color:(getPref "Fronts Color") fieldWidth:20 title:"Choose a color for drawing lines"
+	colorPicker poCp "Polygon # Color:      " offset:[-10,0] width:185 height:16 color:(getPref "Polygon Text Color") fieldWidth:20 title:"Choose a color for Polygons Names"
+	colorPicker veCp "Vertices # Color:      " offset:[-10,0] width:185 height:16 color:(getPref "Vertex Text Color") fieldWidth:20 title:"Choose a color for Vertices Numbers"
+	editText boTx "Borders Layer" text:(getINISetting IniFile "Preferences" "Border Layer") width:185 height:16 offset:[5,0] align:#right
+	editText erTx "Edges Layer" text:(getINISetting IniFile "Preferences" "Fronts Layer") width:185 height:16 offset:[5,0] align:#right
+	editText vrTx "Vertices # Layer" text:(getINISetting IniFile "Preferences" "Vertex Text Layer") offset:[5,0] width:185 height:16 align:#right
+	editText poTx "Polygons # Layer" text:(getINISetting IniFile "Preferences" "Polygons Text Layer") offset:[5,0] width:185 height:16 align:#right
+	checkbox verChk "" align:#left width:20 height:20 across:2
+	spinner vSize "Vertices # Size:   " range:[1,100,(getPref "Vertex Text Size")] offset:[-10,0] fieldWidth:30 type:#integer scale:1 align:#right 
+	checkbox polyChk "" align:#left width:20 height:20 across:2
+	spinner pSize "Poligons # Size:   " range:[1,100,(getPref "Polygons Text Size")] offset:[-10,0] fieldWidth:30 type:#integer scale:1 align:#right 
+	spinner bSize "Drawing Offset:   " range:[1,100,(getPref "bBox Offset")] offset:[-10,0] fieldWidth:30 type:#integer scale:1 align:#right
+	label CreateLbl "Change Properties" align:#left offset:[0,10]
+	button SettingsBtn "Apply" width:50 height:20 align:#right offset:[0,-20]
+	on drawingsSettings open do (
+			vrTx.enabled = verChk.checked
+			poTx.enabled = verChk.checked
+			if verChk.checked == false then vSize.enabled = false else vSize.enabled = true
+			if polyChk.checked == false then pSize.enabled = false else pSize.enabled = true
+		)
+	on boCp changed col do (setPref "Border Color" boCp.color)
+	on edCp changed col do (setPref "Fronts Color" edCp.color)
+	on poCp changed col do (setPref "Polygon Text Color" poCp.color)
+	on veCp changed col do (setPref "Vertex Text Color" veCp.color)
+	on boTx entered boText do (setPref "Border Layer" boText)
+	on erTx entered erText do (setPref "Fronts Layer" erText)
+	on vrTx entered vrText do (setPref "Vertex Text Layer" vrText)
+	on poTx entered poText do (setPref "Polygons Text Layer" poText)
+	on vSize entered do ( setPref "Vertex Text Size" vSize.value)
+	on pSize entered do ( setPref "Polygons Text Size" pSize.value)
+	on bSize entered do ( setPref "bBox Offset" bSize.value)
+	on verChk changed state do (vSize.enabled = state; vrTx.enabled = state)
+	on polyChk changed state do (pSize.enabled = state; poTx.enabled = state)
+)
+rollout DrawPolysSubrollout "Export Settings" width:162 height:50
+(
+	group "Draw:"
+	(
+-- 	on verChk changed state do(print "chk8" + "changed")
+	)
 )
 rollout Draw_3D_Main "Draw 3D Main" width:220 height:500
 (
-	SubRollout theFrontsSubrollout pos:[5,5] width:210 height:400
-	SubRollout dataSettings pos:[5,5]
-	button CreateBtn "Create" pos:[0,405] width:80 height:32
+	fn updateWarning = (
+		if $ == undefined or selection.count > 1 then (
+			Draw_3D_Main.Warlbl.text = "Warning: " + "You need to select one object"
+		) else (
+			Draw_3D_Main.Warlbl.text = ""
+		)
+	)
+	fn callBack ev nd = 
+	(
+		updateWarning()
+		if ev == #selectionChanged and selection.count == 1 and isKindOf $ GeometryClass do  print nd
+		enableButtons Draw_3D_Main.theFrontsSubrollout.frontsSubRollout st:(if $ == undefined or selection.count > 1 then false else true)
+	)
+	subRollout theFrontsSubrollout "" pos:[5,5] width:210 height:400
+	subRollout drawingsSettings "" pos:[5,5] width:194 height:14
+	button CreateBtn "Draw It" pos:[5,420] width:80 height:32 align:#right
+	label Warlbl "Warning:" align:#center pos:[10,475] width:200 height:16
+	on Draw_3D_Main open do (
+		updateWarning ()
+		(callbackItem = NodeEventCallback mouseUp:true delay:100 all:callBack)
+	)
+	on CreateBtn pressed do ( 					--MAIN FUNCTION
+		theObj = convertTo (copy $) Editable_Poly
+-- 		theObj = $
+		checkBoxArr = #{}
+			for i in Draw_3D_Main.theFrontsSubrollout.frontsSubRollout.controls where classOF i == CheckBoxControl and i.checked == on do
+			( 
+				n = (getINISetting IniFile "Fronts" i.text) as integer
+				appendIfunique checkBoxArr n 
+			)
+		global fArr = frontFace theObj offset:((getINISetting IniFile "Preferences" "bBox offset") as integer) fronts:checkBoxArr 
+		matrixArr = getMatrix()
+		for fr = 1 to fArr.count do drawEP theObj matrixArr[fr]
+		delete theobj
+		delete fArr
+		fArr = #()
+	)
+	on Draw_3D_Main close do 
+		(
+		callbackItem = undefined
+		gc light:true
+		)
 )
 CreateDialog Draw_3D_Main
 AddSubRollout Draw_3D_Main.theFrontsSubrollout frontsSubRollout rolledUp:off
-AddSubRollout Draw_3D_Main.theFrontsSubrollout dataSettings rolledUp:on
-rollout unnamedRollout "Untitled" width:162 height:50
-(
-	group "Group"
-	(
-	checkbox chk8 ""align:#right width:20 height:20 across:3 
-	checkbox chk9 ""align:#right width:20 height:20 
-	checkbox chk10 ""align:#right width:20 height:20 
-	on chk8 changed state do(print "chk8" + "changed")
-	)
-)
--- createDialog unnamedRollout
+AddSubRollout Draw_3D_Main.theFrontsSubrollout drawingsSettings rolledUp:on
+AddSubRollout Draw_3D_Main.theFrontsSubrollout DrawPolysSubrollout rolledUp:off

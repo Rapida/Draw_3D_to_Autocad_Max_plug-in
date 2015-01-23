@@ -7,32 +7,48 @@ fn drawEP Obj Cam =
 		selArray = #() --init. an array to collect faces
 		for f = 1 to theFaceCount do --loop through all faces
 		(
-			in coordsys Cam.transform
+			in coordsys Cam
+			(
 			theFN = polyop.getFaceNormal Obj f
-			if theFN.z < 0.1 then append selArray f -- if Z is negative, add to array
+			if theFN.z < 0.01 then append selArray f -- if Z is negative, add to array
 			append faceArr f -- if Z is negative, add to array
+			)
 		)
 		polyop.setHiddenFaces Obj selArray --set the face selection in the EMesh
 		hidFaceArr = polyop.getHiddenFaces Obj
+		polyop.setFaceMatID Obj selArray 2 -- set matId 2 to hidden faces
 		vizFaceArr = faceArr - hidFaceArr
+		polyop.setFaceMatID Obj vizFaceArr 1 -- set matId 1 to all faces
 		vE = polyop.getEdgesUsingFace Obj vizFaceArr
-		newShape = splineShape()
-		newShape.name = "Front_Draw_" + Obj.name
-		oTr = newShape.transform
-		if isValidNode newShape do
-		(
-			local viewTM = Cam.transform
-			local nuTransform = viewTM
-			newShape.transform = nuTransform
+		frontShape = splineShape name:(uniqueName ("Front_Draw_" + Obj.name + "_")) colorByLayer:true
+		borderShape = splineShape name:(uniqueName ("Border_Draw_" + Obj.name + "_")) colorByLayer:true
+		oTr = frontShape.transform
+		if isValidNode frontShape do frontShape.transform = Cam
+		if isValidNode borderShape do borderShape.transform = Cam
+			fName = "frontShape_001"
+			bName = "borderShape_001"
+			borderEdgesArr = #{}
+			eCount = polyop.getNumEdges Obj
+			for ed = 1 to eCount do ( --loop through all edges
+			theFaces = (polyOp.getFacesUsingEdge Obj #(ed)) as array   --get the faces sharing the current edge
+			 if theFaces.count == 2 then	 --if there are two faces sharing the edge,
+			 (
+				if polyOp.getFaceMatID Obj theFaces[1] != polyOp.getFaceMatID Obj theFaces[2] do --compare their Material IDs. If different, collect the edge
+				append borderEdgesArr ed
+			 ) else (if theFaces.count == 1 and polyOp.getFaceMatID Obj theFaces[1] == 1 do append borderEdgesArr ed)
 		)
-			nName = "Shape_001"
-			polyop.createShape Obj vE smooth:false name:nName --create shape from selected edges
-			sh = getNodeByName nName exact:true
-			addAndWeld newShape sh 0.0
-			newShape.transform = oTr
+			fE = vE - borderEdgesArr
+			polyop.createShape Obj borderEdgesArr smooth:false name:bName --create shape from border edges
+			polyop.createShape Obj fE smooth:false name:fName --create shape from nonborder edges
+			frSh = getNodeByName fName exact:true
+			brSh = getNodeByName bName exact:true
+			addAndWeld frontShape frSh 0.0
+			addAndWeld borderShape brSh 0.0
+			frontShape.transform = oTr
+			borderShape.transform = oTr
 			fn flatShape oSh =
 			(
-			  new_z = oSh.pos.z
+				new_z = oSh.pos.z
 			  for s = 1 to (numSplines oSh) do
 			  (
 				for k = 1 to (numKnots oSh s) do
@@ -40,7 +56,7 @@ fn drawEP Obj Cam =
 				  knt = getKnotPoint oSh s k
 				  in_vec = getInVec oSh s k
 				  out_vec = getOutVec oSh s k
-				  knt.z = in_vec.z = out_vec.z = new_z
+					knt.z = in_vec.z = out_vec.z = new_z
 				  setInVec oSh s k in_vec
 				  setOutVec oSh s k out_vec
 				  setKnotPoint oSh s k knt
@@ -48,43 +64,11 @@ fn drawEP Obj Cam =
 			  )--end s loop
 			  updateshape oSh --flat new shape
 			)
-	flatShape newShape
-	if isValidNode newShape do
-	(
-		local viewTM = Cam.transform
-		local nuTransform = viewTM
-		newShape.transform = nuTransform
-	)
-		Obj.children.parent = newShape
-		drawLayer.addnode newShape
-		coordsys parent newShape.children.pos.z = 0
-	fn addMod theObj =
-	(
-		textSizeMod = EmptyModifier()
-		textSizeMod.name = "Text Size"
-		addmodifier theObj textSizeMod
-		TextSizeCA = attributes TextAttribute
-		(
-			parameters PRM_Size rollout:RLT_Size 
-				(
-					vertexSize type:#integer ui:SPN_Text default:v_T_size
-					polygonSize type:#integer ui:SPN_Poly default:p_T_size
-				)
-			rollout RLT_Size "Text size"
-				(
-					spinner SPN_Text "Vertex Size:" type: #integer
-					spinner SPN_Poly "Polygon Size:" type: #integer
-				)
-		)
-		custattributes.add theObj.modifiers["Text size"] TextSizeCA BaseObject:false
-	)
-		addMod newShape
-		for n in newShape.children do 
-			(
-				if n.layer.name == vertLayerName do paramWire.connect newShape.modifiers[#Text_Size].TextAttribute[#vertexSize] n.baseObject[#Size] "vertexSize"
-				if n.layer.name == polyLayerName do paramWire.connect newShape.modifiers[#Text_Size].TextAttribute[#polygonSize] n.baseObject[#Size] "polygonSize"
-			)
-		newShape.colorBylayer = true
-		newShape.children.colorByLayer = true
+	flatShape frontShape
+	flatShape borderShape
+		if isValidNode frontShape do (frontShape.transform = Cam; frontsLayer.addnode frontShape)
+		if isValidNode borderShape do (borderShape.transform = Cam; bordersLayer.addnode borderShape)
+		frontShape.parent = borderShape
+		coordsys parent frontShape.children.pos.z = 0
 	)
 )
