@@ -16,6 +16,5 @@ if LayerManager.getLayerFromName frontsLayerName == undefined then (
 	global frontsLayer = LayerManager.getLayerFromName frontsLayerName
 	setPref "Fronts Color" frontsLayer.wireColor 
 )
-	
 
 

@@ -9,8 +9,9 @@ thePath = getFilenamePath fileName
 IniFile = thePath + "draw3d.ini"
 	fn getPref data =(execute (getINISetting IniFile "Preferences" data))
 	fn setPref dataOut val prOut:"Preferences" = (setINISetting IniFile prOut dataOut (val as String))
-		filein (thePath + "drawEP_Obj_Cam.ms")
+		filein (thePath + "drawEP_Obj_Cam.ms") --Draw the fronts
 		filein (thePath + "globals.ms")
+		filein (thePath + "Draw_Polygons.ms") -- Flatten the mesh function
 	fn enableButtons sub st:true= 
 	(
 		for d in sub.controls do d.enabled = st
@@ -79,7 +80,11 @@ rollout frontsSubRollout "Fronts Parameters"
 				else
 				( if fArr != undefined and fArr != #() do delete fArr
 					fArr = undefined ) )
-			on frontsSubRollout close do ( if fArr != undefined or fArr != #() do delete fArr )
+			on frontsSubRollout close do 
+				(
+					if fArr == undefined do continue;
+					if fArr != undefined or fArr != #() do delete fArr 
+				)
 	)
 rollout drawingsSettings "Drawing Settings" width:220 height:211
 (
@@ -126,7 +131,7 @@ rollout DrawPolysSubrollout "Export Settings" width:162 height:50
 -- 	on verChk changed state do(print "chk8" + "changed")
 	)
 )
-rollout Draw_3D_Main "Draw 3D Main" width:220 height:500
+rollout Draw_3D_Main "Draw 3D Main" width:220 height:550
 (
 	fn updateWarning = (
 		if $ == undefined or selection.count > 1 then (
@@ -143,8 +148,10 @@ rollout Draw_3D_Main "Draw 3D Main" width:220 height:500
 	)
 	subRollout theFrontsSubrollout "" pos:[5,5] width:210 height:400
 	subRollout drawingsSettings "" pos:[5,5] width:194 height:14
-	button CreateBtn "Draw It" pos:[5,420] width:80 height:32 align:#right
-	label Warlbl "Warning:" align:#center pos:[10,475] width:200 height:16
+	radiobuttons unitsToDraw "Output Units Format" pos:[110,420] labels:#("Metric", "US") tooltip:#("Metric for 0.0cm", "US for 0'0\"" )
+	button CreateBtn "Fronts" pos:[5,470] width:100 height:32 align:#right tooltip:"Draw choosen fronts for selectes object"
+	button flatenBtn "Flatten" pos:[110,470] width:100 height:32 align:#right tooltip:"Flat the object"
+	label Warlbl "Warning:" align:#center pos:[10,525] width:200 height:16
 	on Draw_3D_Main open do (
 		updateWarning ()
 		(callbackItem = NodeEventCallback mouseUp:true delay:100 all:callBack)
@@ -160,10 +167,23 @@ rollout Draw_3D_Main "Draw 3D Main" width:220 height:500
 			)
 		global fArr = frontFace theObj offset:((getINISetting IniFile "Preferences" "bBox offset") as integer) fronts:checkBoxArr 
 		matrixArr = getMatrix()
-		for fr = 1 to fArr.count do drawEP theObj matrixArr[fr]
+		vState = Draw_3D_Main.theFrontsSubrollout.drawingsSettings.verChk.state
+		pState = Draw_3D_Main.theFrontsSubrollout.drawingsSettings.polyChk.state
+		for fr = 1 to fArr.count do drawEP theObj matrixArr[fr] ver:vState poly:pState oName:$.name
 		delete theobj
 		delete fArr
 		fArr = #()
+	)
+	on flatenBtn pressed do
+	(
+		unitsFn = case unitsToDraw.state of (
+			1:#centimeters
+			2:#ft_Frac_In
+		)
+		if unitsFn == #centimeters do (units.DisplayType = #metric; units.MetricType = unitsFn)
+		if unitsFn == #ft_Frac_In do (units.DisplayType = #us; units.USType = unitsFn; units.USFrac = #Frac_1_2)
+		print (unitsFn as string)
+		flattenTheMesh $
 	)
 	on Draw_3D_Main close do 
 		(

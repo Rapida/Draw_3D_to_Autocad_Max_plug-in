@@ -1,4 +1,4 @@
-fn drawEP Obj Cam = 
+fn drawEP Obj Cam ver:false poly:false oName:undefined = 
 (
 	faceArr = #{}
 	(
@@ -23,6 +23,7 @@ fn drawEP Obj Cam =
 		frontShape = splineShape name:(uniqueName ("Front_Draw_" + Obj.name + "_")) colorByLayer:true
 		borderShape = splineShape name:(uniqueName ("Border_Draw_" + Obj.name + "_")) colorByLayer:true
 		oTr = frontShape.transform
+-- 			print ("oTr = " + (oTr as string))
 		if isValidNode frontShape do frontShape.transform = Cam
 		if isValidNode borderShape do borderShape.transform = Cam
 			fName = "frontShape_001"
@@ -69,6 +70,57 @@ fn drawEP Obj Cam =
 		if isValidNode frontShape do (frontShape.transform = Cam; frontsLayer.addnode frontShape)
 		if isValidNode borderShape do (borderShape.transform = Cam; bordersLayer.addnode borderShape)
 		frontShape.parent = borderShape
+			if ver == true do
+			(
+				global vertexLayerName = (getINISetting IniFile "Preferences" "Vertex Text Layer") 
+					if LayerManager.getLayerFromName vertexLayerName == undefined then (
+						LayerManager.newLayerFromName vertexLayerName
+						global vertexLayer = LayerManager.getLayerFromName vertexLayerName
+						vertexLayer.wireColor = (getPref "Vertex Text Color")
+					) else (
+						global vertexLayer = LayerManager.getLayerFromName vertexLayerName
+						vertexLayer.wireColor = (getPref "Vertex Text Color")
+					)
+				vTSize = getPref "Vertex Text Size"
+				vV = polyOp.getVertsUsingFace Obj vizFaceArr
+				local vTM = cam
+				for i in vV do
+				(
+					vertN = uniqueName (oName + "_" + (i as string))
+						local vPos = polyop.getVert Obj i
+						vTM.row4 = vPos
+						t = text pos:vPos size:vTSize name:vertN text:(i as string) colorByLayer:true
+						t.transform = vTM; t.parent = frontShape;
+						vertexLayer.addnode t
+						rotate t (eulerangles 0 180 0)
+				)
+			)
+			if poly == true do 
+			(
+				global polygonsLayerName = (getINISetting IniFile "Preferences" "Polygons Text Layer") 
+					if LayerManager.getLayerFromName polygonsLayerName == undefined then (
+						LayerManager.newLayerFromName polygonsLayerName
+						global polygonsLayer = LayerManager.getLayerFromName polygonsLayerName
+						polygonsLayer.wireColor = (getPref "Polygon Text Color")
+					) else (
+						global polygonsLayer = LayerManager.getLayerFromName polygonsLayerName
+						polygonsLayer.wireColor = (getPref "Polygon Text Color")
+					)
+					pTSize = getPref "Polygons Text Size"
+					vP = vizFaceArr
+					local vTM = cam
+					for i in vP do
+					(
+						polyN = uniqueName (oName + "_" + (i as string))
+							local pPos = polyOp.getFaceCenter Obj i
+							vTM.row4 = pPos
+							t = text pos:pPos size:pTSize name:polyN text:(oName + "_" + (i as string)) colorByLayer:true
+							t.transform = vTM; t.parent = frontShape;
+							polygonsLayer.addnode t
+							rotate t (eulerangles 0 180 0)
+					)
+				print "Now i can print the polygons No to text"
+			)
 		coordsys parent frontShape.children.pos.z = 0
 	)
 )
